@@ -19,11 +19,6 @@ use Tracy;
 
 ?>
 
-
-
-
-<!-- Tracy Debug Bar -->
-
 <?php ob_start() ?>
 &nbsp;
 
@@ -61,7 +56,6 @@ use Tracy;
 <?php $output = ob_get_clean(); ?>
 
 
-<script>
 (function() {
 	var debug = document.body.appendChild(document.createElement('div'));
 	if (!document.documentElement.classList) {
@@ -78,6 +72,3 @@ use Tracy;
 		debug.style.display = 'block';
 	});
 })();
-</script>
-
-<!-- /Tracy Debug Bar -->

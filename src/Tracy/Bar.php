@@ -17,15 +17,38 @@ use Tracy;
  */
 class Bar
 {
+	/** @var string */
+	public $directory;
+
 	/** @var string[] */
 	public $info = array();
 
 	/** @var IBarPanel[] */
 	private $panels = array();
 
+	/** @var resource */
+	private $handle;
+
+	/** @var string */
+	private $id;
+
 
 	public function register()
 	{
+		$directory = $this->directory ?: ini_get('upload_tmp_dir');
+
+		if (isset($_GET['_tracy_debug']) && preg_match('#^\w+$#', $_GET['_tracy_debug'])) {
+			$file = $directory . '/bar.' . $_GET['_tracy_debug'];
+			header('Content-Type: text/javascript');
+			@readfile($file);
+			@unlink($file);
+			exit;
+		}
+
+		$this->id = md5(uniqid(TRUE));
+		$this->handle = fopen($directory . '/bar.' . $this->id, 'w');
+		flock($this->handle, LOCK_EX);
+
 		register_shutdown_function(array($this, 'render'));
 	}
 
@@ -66,10 +89,6 @@ class Bar
 	 */
 	public function render()
 	{
-		if (connection_aborted() || !Helpers::isHtmlMode()) {
-			return;
-		}
-
 		$obLevel = ob_get_level();
 		$panels = array();
 		foreach ($this->panels as $id => $panel) {
@@ -115,9 +134,19 @@ class Bar
 			}
 		}
 		$session = NULL;
-
+		ob_start();
 		$info = array_filter($this->info);
 		require __DIR__ . '/templates/bar.phtml';
+		$content = ob_get_clean();
+		if ($this->handle) {
+			fwrite($this->handle, $content);
+			fclose($this->handle);
+		}
+
+		if (!connection_aborted() && Helpers::isHtmlMode()) {
+			echo "\n\n\n<!-- Tracy Debug Bar -->\n";
+			echo $this->handle ? "<script src='?_tracy_debug=$this->id'></script>\n" : '<script> ' . $content . '</script>';
+		}
 	}
 
 }

@@ -201,7 +201,7 @@ class Debugger
 				FALSE
 			);
 
-		} elseif (!connection_aborted() && !self::$productionMode && self::isHtmlMode()) {
+		} elseif (!connection_aborted() && !self::$productionMode && Helpers::isHtmlMode()) {
 			self::getBar()->render();
 		}
 	}
@@ -223,7 +223,7 @@ class Debugger
 			$protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
 			$code = isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE ') !== FALSE ? 503 : 500;
 			header("$protocol $code", TRUE, $code);
-			if (self::isHtmlMode()) {
+			if (Helpers::isHtmlMode()) {
 				header('Content-Type: text/html; charset=UTF-8');
 			}
 		}
@@ -235,13 +235,13 @@ class Debugger
 			}
 
 			$error = isset($e) ? "Unable to log error.\n" : NULL;
-			if (self::isHtmlMode()) {
+			if (Helpers::isHtmlMode()) {
 				require __DIR__ . '/templates/error.phtml';
 			} elseif (PHP_SAPI === 'cli') {
 				fwrite(STDERR, "ERROR: application encountered an error and can not continue.\n$error");
 			}
 
-		} elseif (!connection_aborted() && self::isHtmlMode()) {
+		} elseif (!connection_aborted() && Helpers::isHtmlMode()) {
 			self::getBlueScreen()->render($exception);
 			self::getBar()->render();
 
@@ -335,16 +335,8 @@ class Debugger
 
 		} else {
 			self::fireLog(new ErrorException($message, 0, $severity, $file, $line));
-			return self::isHtmlMode() ? NULL : FALSE; // FALSE calls normal error handler
+			return Helpers::isHtmlMode() ? NULL : FALSE; // FALSE calls normal error handler
 		}
-	}
-
-
-	private static function isHtmlMode()
-	{
-		return empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-			&& PHP_SAPI !== 'cli'
-			&& !preg_match('#^Content-Type: (?!text/html)#im', implode("\n", headers_list()));
 	}
 
 

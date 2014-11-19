@@ -24,6 +24,12 @@ class Bar
 	private $panels = array();
 
 
+	public function register()
+	{
+		register_shutdown_function(array($this, 'render'));
+	}
+
+
 	/**
 	 * Add custom panel.
 	 * @param  IBarPanel
@@ -60,6 +66,10 @@ class Bar
 	 */
 	public function render()
 	{
+		if (connection_aborted() || !Helpers::isHtmlMode()) {
+			return;
+		}
+
 		$obLevel = ob_get_level();
 		$panels = array();
 		foreach ($this->panels as $id => $panel) {

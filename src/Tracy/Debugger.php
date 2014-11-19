@@ -164,6 +164,10 @@ class Debugger
 			set_exception_handler(array(__CLASS__, 'exceptionHandler'));
 			set_error_handler(array(__CLASS__, 'errorHandler'));
 
+			if (!self::$productionMode) {
+				self::getBar()->register();
+			}
+
 			foreach (array('Tracy\Bar', 'Tracy\BlueScreen', 'Tracy\DefaultBarPanel', 'Tracy\Dumper',
 				'Tracy\FireLogger', 'Tracy\Helpers', 'Tracy\Logger', ) as $class) {
 				class_exists($class);
@@ -200,9 +204,6 @@ class Debugger
 				Helpers::fixStack(new ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])),
 				FALSE
 			);
-
-		} elseif (!connection_aborted() && !self::$productionMode && Helpers::isHtmlMode()) {
-			self::getBar()->render();
 		}
 	}
 
@@ -243,7 +244,6 @@ class Debugger
 
 		} elseif (!connection_aborted() && Helpers::isHtmlMode()) {
 			self::getBlueScreen()->render($exception);
-			self::getBar()->render();
 
 		} else {
 			self::fireLog($exception);
